@@ -19,13 +19,11 @@ public class MainActivity extends AppCompatActivity {
 
         novoJogo= findViewById(R.id.cardViewNovoJogo);
 
-        novoJogo.setOnTouchListener(new View.OnTouchListener() {
+        novoJogo.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-
+            public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, Options.class);
                 startActivity(intent);
-                return false;
             }
         });
 

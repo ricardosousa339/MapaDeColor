@@ -18,8 +18,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TelaPintura extends AppCompatActivity {
+
+
+    static final int AZUL = Color.rgb(33,150,243);
+    static final int VERDE = Color.rgb(76,175,80);
+    static final int VERMELHO = Color.rgb(244,67,54);
+    static final int AMARELO = Color.rgb(255,235,59);
+    static final int ROSA = Color.rgb(233,30,99);
+    static final int MARROM = Color.rgb(121,85,72);
+    static final int ROXO = Color.rgb(103,58,183);
+    static final int LARANJA = Color.rgb(255,152,0);
+
 
     ImageView imageView;
     TextView textoLog;
@@ -97,21 +111,22 @@ public class TelaPintura extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (azul.isChecked())
-                    corAtual = Color.rgb(33,150,243);
+                    corAtual = TelaPintura.AZUL;
                 else if (verde.isChecked())
-                    corAtual = Color.rgb(76,175,80);
+                    corAtual = TelaPintura.VERDE;
                 else if (vermelho.isChecked())
-                    corAtual = Color.rgb(244,67,54);
+                    corAtual = TelaPintura.VERMELHO;
                 else if (amarelo.isChecked())
-                    corAtual = Color.rgb(255,235,59);
+                    corAtual = TelaPintura.AMARELO;
                 else if(rosa.isChecked())
-                    corAtual = Color.rgb(233,30,99);
+                    corAtual = TelaPintura.ROSA;
                 else if (marrom.isChecked())
-                    corAtual = Color.rgb(121,85,72);
+                    corAtual = TelaPintura.MARROM;
                 else if (roxo.isChecked())
-                    corAtual = Color.rgb(103,58,183);
+                    corAtual = TelaPintura.ROXO;
                 else if (laranja.isChecked())
-                    corAtual = Color.rgb(255,152,0);
+                    corAtual = TelaPintura.LARANJA;
+
                 paleta.getProgressDrawable().setColorFilter(
                         corAtual, android.graphics.PorterDuff.Mode.SRC_IN);
             }
@@ -138,12 +153,26 @@ public class TelaPintura extends AppCompatActivity {
 
                 if(ponto[0] < 0 || ponto[1] < 0)
                     return false;
-                final int corTocada = myBitmap.getPixel((int)ponto[0],(int)ponto[1]) == Color.BLACK || myBitmap.getPixel((int)ponto[0],(int)ponto[1])  == Color.rgb(153,217,234)? Color.WHITE : myBitmap.getPixel((int)ponto[0],(int)ponto[1]);
+                int corTocada = myBitmap.getPixel((int)ponto[0],(int)ponto[1]);
 
+                if(corTocada != TelaPintura.AZUL &&
+                        corTocada != TelaPintura.AMARELO &&
+                        corTocada != TelaPintura.LARANJA &&
+                        corTocada != TelaPintura.MARROM &&
+                        corTocada != TelaPintura.ROSA &&
+                        corTocada != TelaPintura.ROXO &&
+                        corTocada != TelaPintura.VERDE &&
+                        corTocada != TelaPintura.VERMELHO &&
+                        corTocada != Color.WHITE)
+                {
+                    corTocada = Color.WHITE;
+                }
+
+                final int finalCorTocada = corTocada;
                 Runnable pt = new Runnable() {
                     @Override
                     public void run() {
-                        FloodFillThread floodFillThread = new FloodFillThread(Thread.currentThread(), copyMap, new Point((int)ponto[0],(int)ponto[1]),corTocada,corAtual);
+                        FloodFillThread floodFillThread = new FloodFillThread(Thread.currentThread(), copyMap, new Point((int)ponto[0],(int)ponto[1]), finalCorTocada,corAtual);
                         floodFillThread.run();
                         imageView.setImageBitmap(copyMap);
                         todosNiveis[nivel].setMapa(copyMap);
@@ -168,21 +197,21 @@ public class TelaPintura extends AppCompatActivity {
 
                     int temp1 = (int)(todosNiveis[nivel].getRegioes()[i].x * todosNiveis[nivel].getPropLargura());
                    int temp2 = (int)(todosNiveis[nivel].getRegioes()[i].y * todosNiveis[nivel].getPropAltura());
-                    double temp3 = todosNiveis[nivel].getPropAltura();
 
                     //Log.e("xy",temp3+"   ");
 
                     cores[i] = todosNiveis[nivel].getMapa().getPixel(temp1,temp2);
+                    
                     temp += "Regiao "+i+": "+nomeDaCor(cores[i])+"\n";
                 }
 
-
+                
 
                 Log.e("Ponto", ponto[0]+" x "+ponto[1]);
 
                 Log.e("Regioes",temp);
-                Toast.makeText(TelaPintura.this, temp, Toast.LENGTH_SHORT).show();
-                //Toast.makeText(TelaPintura.this, "Numero de Cores: "+contaCores(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(TelaPintura.this, temp, Toast.LENGTH_SHORT).show();
+                Toast.makeText(TelaPintura.this, "Numero de Cores: "+contaCores(cores), Toast.LENGTH_SHORT).show();
 
                 return false;
             }
@@ -194,7 +223,7 @@ public class TelaPintura extends AppCompatActivity {
 
     private void setNiveis() {
         todosNiveis = new Nivel[10];
-        Bitmap temp = BitmapFactory.decodeResource(getResources(), R.drawable.mapa_test20);
+        Bitmap temp = BitmapFactory.decodeResource(getResources(), R.drawable.regioes_brasil);
         todosNiveis[0] = new Nivel(temp, temp.getHeight()/2171.0,temp.getWidth()/3071.0, converteParaPoint(new int[]{1226 ,2168 ,1428 ,1929 ,1559},new int[]{606 ,916 ,1189 ,1402 ,1772}));
 
         temp = BitmapFactory.decodeResource(getResources(), R.drawable.regiao_norte);
@@ -219,31 +248,23 @@ public class TelaPintura extends AppCompatActivity {
 
     private String nomeDaCor(int cor) {
 
-            int azul, verde, vermelho, amarelo,rosa, marrom, roxo, laranja;
-            azul = Color.rgb(33,150,243);
-            verde = Color.rgb(76,175,80);
-            vermelho = Color.rgb(244,67,54);
-            amarelo = Color.rgb(255,235,59);
-            rosa = Color.rgb(233,30,99);
-            marrom = Color.rgb(121,85,72);
-            roxo = Color.rgb(103,58,183);
-            laranja = Color.rgb(255,152,0);
 
-        if(cor == azul)
+
+        if(cor == TelaPintura.AZUL)
             return "Azul";
-        if(cor == verde)
+        if(cor == TelaPintura.VERDE)
             return "Verde";
-        if(cor == vermelho)
+        if(cor == TelaPintura.VERMELHO)
             return "Vermelho";
-        if(cor == amarelo)
+        if(cor == TelaPintura.AMARELO)
             return "Amarelo";
-        if(cor == rosa)
+        if(cor == TelaPintura.ROSA)
             return "Rosa";
-        if(cor == marrom)
+        if(cor == TelaPintura.MARROM)
             return "Marrom";
-        if(cor == roxo)
+        if(cor == TelaPintura.ROXO)
             return "Roxo";
-        if(cor == laranja)
+        if(cor == TelaPintura.LARANJA)
             return "Laranja";
 
         return "";
@@ -267,9 +288,14 @@ public class TelaPintura extends AppCompatActivity {
         return pontos;
     }
 
-    int contaCores(){
+    //[1, 2, 3, 3, 4];
 
-        //TODO: implementar esse caralho
-        return 0;
+    int contaCores(int[] cores){
+        Set<Integer> set = new HashSet<Integer>(cores.length);
+        for (int i : cores) {
+            if (!nomeDaCor(i).equals(""))
+                set.add(i);
+        }
+        return set.size();
     }
 }
